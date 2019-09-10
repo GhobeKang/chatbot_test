@@ -1,0 +1,13 @@
+{
+    "name": "ghobekang/chatbot_test",
+    "require": {
+        "php": "^7.1",
+        "longman/telegram-bot": "^0.60.0"
+    },
+    "authors": [
+        {
+            "name": "ghobekang",
+            "email": "dreamty88@gmail.com"
+        }
+    ]
+}
