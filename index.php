@@ -18,3 +18,9 @@
         <script src="" async defer></script>
     </body>
 </html>
+
+<?
+    while (1) {
+        
+    }
+?>

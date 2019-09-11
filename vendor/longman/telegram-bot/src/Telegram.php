@@ -978,4 +978,29 @@ class Telegram
     {
         return $this->last_update_id;
     }
+
+    public function getMessage() {
+        return $this->update->message['text'];
+    }
+    
+    public function getForbiddenLists($sql) {
+        $result_array = array();
+
+        if ($sql) {
+            foreach($this->pdo->query($sql) as $row) {
+                array_push($result_array, $row['word_name']);
+            }
+        }
+
+        return $result_array;
+    }
+
+    public function getEditParams() {
+        $data = [
+            'message_id' => $this->update->message['message_id'],
+            'chat_id' => $this->update->message['chat']['id']
+        ];
+        return $data;
+        
+    }
 }
