@@ -16,15 +16,23 @@ $mysql_credentials = [
     'database' => 'aqoom',
  ];
 
+$commands_paths = [
+    __DIR__ . '/Commands',
+];
+
 try {
     // Create Telegram API object
     $telegram = new Longman\TelegramBot\Telegram($bot_api_key, $bot_username);
+    $telegram->addCommandsPaths($commands_paths);
+    $telegram->enableAdmins([
+        '873456015'
+    ]);
+    $telegram->enableMySql($mysql_credentials);
+
     $forbidden_lists = array();
 
     // Handle telegram webhook request
     if ($telegram->handle()) {
-        $telegram->enableMySql($mysql_credentials);
-
         $text = $telegram->getMessage();
         $sql = "select * from forb_wordlist where 1";
         $forbidden_lists = $telegram->getForbiddenLists($sql);
@@ -40,11 +48,13 @@ try {
                     $result = Request::deleteMessage($data);
                     if ($result->isOk()) {
                         // send announce message
+                        $telegram->delMessage($data['message_id'], $data['chat_id']);
+                        return true;
                     }
                 }
             }
         }
-        // $telegram->handleGetUpdates();
+        
     }
 } catch (Longman\TelegramBot\Exception\TelegramException $e) {
     // Silence is golden!

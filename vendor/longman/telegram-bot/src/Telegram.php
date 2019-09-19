@@ -983,7 +983,7 @@ class Telegram
         return $this->update->message['text'];
     }
     
-    public function getForbiddenLists($sql) {
+    public function getForbiddenLists($sql = "select * from forb_wordlist where 1") {
         $result_array = array();
 
         if ($sql) {
@@ -1002,5 +1002,22 @@ class Telegram
         ];
         return $data;
         
+    }
+
+    public function delMessage( $message_id, $chat_id )  {
+        $sql = "
+            SET SQL_SAFE_UPDATES=0;
+            DELETE FROM telegram_update WHERE message_id = ".$message_id.";
+            DELETE FROM message WHERE id = ".$message_id.";
+        ";
+
+        if ($this->pdo->query($sql)) {
+            $update_count_sql = "UPDATE chat SET depence_count = depence_count + 1 WHERE id = " . $chat_id;
+            if ($this->pdo->query($update_count_sql)){
+                return true;
+            };
+        }
+
+        return false;
     }
 }
