@@ -980,7 +980,24 @@ class Telegram
     }
 
     public function getMessage() {
-        return $this->update->message['text'];
+        if (isset($this->update->message['text'])) {
+            return $this->update->message['text'];
+        } else {
+            return false;
+        }
+        
+    }
+
+    public function getImage() {
+        if (isset($this->update->message['photo'])) {
+            return $this->update->message['photo'];
+        } else {
+            return false;
+        }
+    }
+
+    public function getChatId() {
+        return $this->update->message['chat']['id'];
     }
     
     public function getForbiddenLists($sql = "select * from forb_wordlist where 1") {
@@ -989,6 +1006,19 @@ class Telegram
         if ($sql) {
             foreach($this->pdo->query($sql) as $row) {
                 array_push($result_array, $row['word_name']);
+            }
+        }
+
+        return $result_array;
+    }
+
+    public function getWhitelist ($chat_id) {
+        $result_array = array();
+        $sql = "select * from whitelist_url where chat_id=".$chat_id;
+
+        if ($sql) {
+            foreach($this->pdo->query($sql) as $row) {
+                array_push($result_array, $row['url_pattern']);
             }
         }
 
@@ -1004,12 +1034,34 @@ class Telegram
         
     }
 
-    public function delMessage( $message_id, $chat_id )  {
+    public function delMessage( $message_id, $chat_id, $type, $img='' )  {
         $sql = "
             SET SQL_SAFE_UPDATES=0;
+            INSERT INTO telegram_deleted_msg_log (msg, del_date, created_date, type, chat_id) 
+                VALUES 
+                ((SELECT message.text FROM message WHERE id = ".$message_id."), 
+                now(), 
+                (SELECT message.date as msg_date FROM message WHERE id = ".$message_id."), 
+                '".$type."',
+                ".$chat_id.");
             DELETE FROM telegram_update WHERE message_id = ".$message_id.";
             DELETE FROM message WHERE id = ".$message_id.";
         ";
+        if ($img !== '') {
+            $sql = "
+                SET SQL_SAFE_UPDATES=0;
+                INSERT INTO telegram_deleted_msg_log (msg, del_date, created_date, type, chat_id, photo_base64) 
+                    VALUES 
+                    ('',
+                    now(), 
+                    (SELECT message.date as msg_date FROM message WHERE id = ".$message_id."), 
+                    '".$type."',
+                    ".$chat_id.",
+                    '".$img."');
+                DELETE FROM telegram_update WHERE message_id = ".$message_id.";
+                DELETE FROM message WHERE id = ".$message_id.";
+            ";
+        }
 
         if ($this->pdo->query($sql)) {
             $update_count_sql = "UPDATE chat SET depence_count = depence_count + 1 WHERE id = " . $chat_id;
