@@ -13,6 +13,7 @@ namespace Longman\TelegramBot\Commands\UserCommands;
 use Longman\TelegramBot\Commands\UserCommand;
 use Longman\TelegramBot\Entities\ServerResponse;
 use Longman\TelegramBot\Exception\TelegramException;
+use Longman\TelegramBot\Request;
 
 /**
  * Start command
@@ -47,10 +48,27 @@ class StartCommand extends UserCommand
      */
     public function execute()
     {
-        //$message = $this->getMessage();
-        //$chat_id = $message->getChat()->getId();
-        //$user_id = $message->getFrom()->getId();
+        $telegram = $this->getTelegram();
+        $message = $this->getMessage();
+        $chat_id = $message->getChat()->getId();
+        $user_id = $message->getFrom()->getId();
 
-        return parent::execute();
+        $startMsg = $telegram->getStartMessage($chat_id);
+        if ($startMsg) {
+            $startMsg = $startMsg[0];
+            if ($startMsg['response_type'] === 'txt') {
+                $dataset = array(
+                    'chat_id' => $chat_id,
+                    'text' => $startMsg['content_txt']
+                );
+                Request::sendMessage($dataset);
+            } else if ($startMsg['response_type'] === 'img') {
+                $dataset = array(
+                    'chat_id' => $chat_id,
+                    'photo' => $startMsg['content_img']
+                );
+                Request::sendPhoto($dataset);
+            }
+        }
     }
 }

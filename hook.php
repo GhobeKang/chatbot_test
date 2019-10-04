@@ -36,8 +36,15 @@ try {
         $text = $telegram->getMessage();
         $chat_id = $telegram->getChatId();
         $photo = $telegram->getImage();
-        $sql = "select * from forb_wordlist where chat_id=".$chat_id;
-        $forbidden_lists = $telegram->getForbiddenLists($sql);
+        $isActivation = $telegram->getStateActivation($chat_id);
+        if (!$isActivation) {
+            $activation_code = sha1($chat_id.time());
+            $telegram->setActivationCode($chat_id, $activation_code);
+        }
+
+        $forbidden_lists = $telegram->getForbiddenLists("select * from forb_wordlist where chat_id=".$chat_id);
+        $faq_lists = $telegram->getFaqLists("select * from faq_list where chat_id=".$chat_id);
+        
         $url_pattern = '/(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})|[a-zA-Z0-9]+\.[^\s]{2,}/';
         if ($photo) {
             if ($photo[0]['file_size'] > 2*1024*1024) {
@@ -91,30 +98,48 @@ try {
         if ($text && preg_match($url_pattern, $text)) {
             $whitelist = $telegram->getWhitelist($chat_id);
 
-            if ($whitelist) {
-                $state = true;
+            $state = true;
 
-                foreach($whitelist as $url) {
-                    $regx = '/' . preg_quote($url, '/') . '/';
-                    if (preg_match('/^\/[\s\S]+\/$/', $url)) {
-                        $regx = $url;
-                    }
-
-                    if (preg_match($regx, $text)) {
-                        $state = false;
-                    }
+            foreach($whitelist as $url) {
+                $regx = '/' . preg_quote($url, '/') . '/';
+                if (preg_match('/^\/[\s\S]+\/$/', $url)) {
+                    $regx = $url;
                 }
 
-                if ($state) {
-                    delMsg($telegram, 'url');
-                    return true;
+                if (preg_match($regx, $text)) {
+                    $state = false;
                 }
             }
+
+            if ($state) {
+                delMsg($telegram, 'url');
+                return true;
+            }
+
         } else {
             if ($forbidden_lists) {
                 foreach($forbidden_lists as $word) {
                     if (strpos($text, $word) !== false) {
                         delMsg($telegram, 'text');
+                        return true;
+                    }
+                }
+            }
+            
+            if (sizeof($faq_lists) !== 0) {
+                foreach($faq_lists as $faq) {
+                    if (strpos($text, $faq['faq_content']) !== false) {
+                        if ($faq['response_type'] === 'txt') {
+                            Request::sendMessage(array('text' => $faq['faq_response'], 'chat_id' => $chat_id));
+                        } else if ($faq['response_type'] === 'img') {
+                            $sp = Request::sendPhoto(array('chat_id' => $chat_id, 'photo' => $faq['faq_response_img']));
+
+                            if ($sp->isOk()) {
+                                return true;
+                            }
+                            
+                        }
+                        
                         return true;
                     }
                 }

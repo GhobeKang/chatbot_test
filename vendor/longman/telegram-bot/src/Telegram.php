@@ -988,6 +988,10 @@ class Telegram
         
     }
 
+    public function getUserId() {
+        return $this->update->message['from']['id'];
+    }
+
     public function getImage() {
         if (isset($this->update->message['photo'])) {
             return $this->update->message['photo'];
@@ -1071,5 +1075,81 @@ class Telegram
         }
 
         return false;
+    }
+
+    public function getFaqLists ($sql) {
+        $result_array = array();
+
+        if ($sql) {
+            foreach($this->pdo->query($sql) as $row) {
+                $dataset = array(
+                    'faq_content' => $row['faq_content'],
+                    'faq_response' => $row['faq_response'],
+                    'response_type' => $row['response_type'],
+                    'faq_response_img' => $row['faq_response_img'],
+                    'img_type' => $row['img_type']
+                );
+                array_push($result_array, $dataset);
+            }
+        }
+
+        return $result_array;
+    }
+
+    public function getStartMessage ($chat_id) {
+        if ($chat_id) {
+            $sql = "SELECT * FROM start_menus WHERE chat_id=".$chat_id;
+            $result_array = array();
+
+            foreach($this->pdo->query($sql) as $row) {
+                $dataset = array(
+                    'content_txt' => $row['content_txt'],
+                    'content_img' => $row['content_img'],
+                    'img_type' => $row['img_type'],
+                    'response_type' => $row['response_type']
+                );
+                
+                array_push($result_array, $dataset);
+            }
+
+            return $result_array;
+        }
+    }
+
+    public function setActivationCode ($chat_id, $activeCode) {
+        if ($chat_id) {
+            $sql = "UPDATE chat SET activation_code='".$activeCode."', is_active=1 WHERE id=".$chat_id;
+            if($this->pdo->query($sql)) {
+                return $activeCode;
+            }
+        }
+    }
+
+    public function getStateActivation ($chat_id) {
+        if ($chat_id) {
+            $sql = "SELECT chat.is_active FROM chat WHERE id=".$chat_id;
+            
+            foreach($this->pdo->query($sql) as $row) {
+                if ($row['is_active'] == 1) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }
+    }
+
+    public function getActivationCode ($chat_id) {
+        if ($chat_id) {
+            $sql = "SELECT * FROM chat WHERE id=".$chat_id;
+
+            foreach($this->pdo->query($sql) as $row) {
+                if ($row['activation_code']) {
+                    return $row['activation_code'];
+                } else {
+                    return false;
+                }
+            }
+        }
     }
 }
