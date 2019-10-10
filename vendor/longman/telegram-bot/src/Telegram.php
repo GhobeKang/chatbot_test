@@ -1004,7 +1004,8 @@ class Telegram
         return $this->update->message['chat']['id'];
     }
     
-    public function getForbiddenLists($sql = "select * from forb_wordlist where 1") {
+    public function getForbiddenLists($chat_id) {
+        $sql = "select * from forb_wordlist where chat_id=".$chat_id;
         $result_array = array();
 
         if ($sql) {
@@ -1077,7 +1078,8 @@ class Telegram
         return false;
     }
 
-    public function getFaqLists ($sql) {
+    public function getFaqLists ($chat_id) {
+        $sql = "select * from faq_list where chat_id=".$chat_id;
         $result_array = array();
 
         if ($sql) {
@@ -1118,7 +1120,7 @@ class Telegram
 
     public function setActivationCode ($chat_id, $activeCode) {
         if ($chat_id) {
-            $sql = "UPDATE chat SET activation_code='".$activeCode."', is_active=1 WHERE id=".$chat_id;
+            $sql = "UPDATE chat SET activation_code='".$activeCode."' WHERE id=".$chat_id;
             if($this->pdo->query($sql)) {
                 return $activeCode;
             }
@@ -1150,6 +1152,36 @@ class Telegram
                     return false;
                 }
             }
+        }
+    }
+
+    public function countUpEntireMsgs ($chat_id) {
+        $sql = "UPDATE chat SET count_msgs=count_msgs + 1 WHERE id=".$chat_id;
+
+        if ($this->pdo->query($sql)) {
+            return true;
+        } else {
+            $this->pdo->rollBack();
+        }
+    }
+
+    public function getIsActive ($chat_id) {
+        $sql = "SELECT chat.is_active as is_active FROM chat WHERE id=".$chat_id;
+
+        foreach($this->pdo->query($sql) as $row) {
+            if ($row['is_active']) {
+                return $row['is_active'];
+            } else {
+                return false;
+            }
+        }
+    }
+
+    public function getMsgType () {
+        if (isset($this->update->message['left_chat_member']) || isset($this->update->message['new_chat_member'])) {
+            return 'comeout';
+        } else {
+            return false;
         }
     }
 }

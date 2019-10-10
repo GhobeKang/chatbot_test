@@ -23,6 +23,10 @@ CREATE TABLE IF NOT EXISTS `chat` (
   `created_at` timestamp NULL DEFAULT NULL COMMENT 'Entry date creation',
   `updated_at` timestamp NULL DEFAULT NULL COMMENT 'Entry date update',
   `old_id` bigint DEFAULT NULL COMMENT 'Unique chat identifier, this is filled when a group is converted to a supergroup',
+  `depence_count` int(255) DEFAULT 0 NOT NULL COMMENT 'count up whenever matched a banned words.',
+  `is_active` tinyint DEFAULT 0 NOT NULL COMMENT 'whther or not is activated properly',
+  `activation_code` VARCHAR(255) NULL COMMENT 'activation code',
+  `count_msgs` INT(10) NOT NULL DEFAULT 0 COMMENT 'entire messages counts',
 
   PRIMARY KEY (`id`),
   KEY `old_id` (`old_id`)
@@ -280,4 +284,53 @@ CREATE TABLE IF NOT EXISTS `request_limiter` (
   `created_at` timestamp NULL DEFAULT NULL COMMENT 'Entry date creation',
 
   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
+
+CREATE TABLE IF NOT EXISTS `faq_list` (
+  `chat_id` INT(11) DEFAULT NULL,
+  `faq_content` VARCHAR(255) DEFAULT NULL,
+  `created_date` DATE DEFAULT NULL,
+  `update_date` DATE DEFAULT NULL,
+  `faq_response` MEDIUMTEXT DEFAULT NULL,
+  `faq_response_img` VARCHAR(255) DEFAULT NULL,
+  `response_type` VARCHAR(10) DEFAULT NULL,
+  `img_type` VARCHAR(10) DEFAULT NULL
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
+
+CREATE TABLE IF NOT EXISTS `forb_wordlist` (
+  `idx` INT(11) DEFAULT NULL AUTO_INCREMENT,
+  `word_name` VARCHAR(255) DEFAULT NULL,
+  `chat_id` INT(255),
+
+  PRIMARY KEY (`idx`)
+  
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
+
+CREATE TABLE IF NOT EXISTS `start_menus` (
+  `chat_id` INT(11),
+  `content_txt` LONGTEXT,
+  `content_img` VARCHAR(255) DEFAULT '',
+  `img_type` VARCHAR(20) DEFAULT '',
+  `response_type` VARCHAR(10) DEFAULT 'txt',
+  `created_date` DATE,
+  `update_date` DATE
+  
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
+
+CREATE TABLE IF NOT EXISTS `telegram_deleted_msg_log` (
+  `msg` VARCHAR(255),
+  `del_date` DATE,
+  `created_date` DATE,
+  `type` VARCHAR(255),
+  `char_id` INT(11),
+  `photo_base64` LONGTEXT
+  
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
+
+CREATE TABLE IF NOT EXISTS `whitelist_url` (
+  `url_pattern` VARCHAR(255),
+  `chat_id` INT(11),
+  `created_date` DATE
+  
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;

@@ -51,7 +51,6 @@ class StartCommand extends UserCommand
         $telegram = $this->getTelegram();
         $message = $this->getMessage();
         $chat_id = $message->getChat()->getId();
-        $user_id = $message->getFrom()->getId();
 
         $startMsg = $telegram->getStartMessage($chat_id);
         if ($startMsg) {
