@@ -1,6 +1,6 @@
 <?php
 // Load composer
-
+echo 'asdf';
 use Longman\TelegramBot\Request;
 
 require __DIR__ . '/vendor/autoload.php';
@@ -9,11 +9,11 @@ $bot_api_key  = '847825836:AAFv02ESsTVjnrzIomgdiVjBGWVw7CpN_Cg';
 $bot_username = 'aqoom_bot';
 
 $mysql_credentials = [
-    'host'     => '127.0.0.1',
+    'host'     => '34.97.24.74',
     'port'     => 3306, // optional
     'user'     => 'root',
-    'password' => 'term!ner1',
-    'database' => 'aqoom',
+    'password' => 'aq@@mServ!ce',
+    'database' => 'aqoomchat',
  ];
 
 $commands_paths = [
@@ -34,19 +34,31 @@ try {
         $chat_id = $telegram->getChatId();
         $photo = $telegram->getImage();
         $msg_type = $telegram->getMsgType();
+        $is_bot = $telegram->getStateBot();
+        $options = $telegram->getStateOptions($chat_id);
+        $caller_member_id = $telegram->getUserId();
+
+        $chat_member = Request::getChatMember(array('chat_id' => $chat_id, 'user_id' => $caller_member_id));
+        if ($chat_member->result->status === 'administrator' || $chat_member->result->status === 'creator') {
+            $telegram->setStateAdmin($caller_member_id);
+        }
+        
+        if ($is_bot && $options['is_block_bot']) {
+            Request::kickChatMember(array('chat_id' => $chat_id, 'user_id' => $is_bot));
+        }
 
         $is_valid = $telegram->getIsActive($chat_id);
         if (!$is_valid) {
             return false;
         }
 
-        if ($msg_type === 'comeout') {
-            delMsg($telegram, $msg_type);
+        if ($msg_type === 'comeout' && $options['is_ordering_comeout']) {
+            delMsg($telegram, $msg_type, '', $telegram->getBotName());
             return true;
         }
 
+        
         $telegram->countUpEntireMsgs($chat_id);
-
         $isActivation = $telegram->getStateActivation($chat_id);
         if (!$isActivation) {
             $activation_code = sha1($chat_id.time());
@@ -59,7 +71,7 @@ try {
         $url_pattern = '/(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})|[a-zA-Z0-9]+\.[^\s]{2,}/';
         
         // if sending a photo
-        if ($photo) {
+        if ($photo && $options['is_img_filter']) {
             if ($photo[0]['file_size'] > 2*1024*1024) {
                 Request::sendMessage($chat_id, 'You must upload a file less than 2Mb.');
                 return false;
@@ -69,11 +81,13 @@ try {
             file_put_contents('temp_image.jpeg', fopen('https://api.telegram.org/file/bot847825836:AAFv02ESsTVjnrzIomgdiVjBGWVw7CpN_Cg/'.$file['path'], 'r'));
 
             recog_face($telegram, $file);
+            $telegram->countUpTargetType($telegram->getChatId(), $telegram->getUserId(), 'act_photo_cnt');
         }
 
         // if the message is matched with URL pattern
         if ($text && preg_match($url_pattern, $text)) {
             $whitelist = $telegram->getWhitelist($chat_id);
+            $telegram->countUpTargetType($chat_id, $telegram->getUserId(), 'act_url_cnt');
 
             $state = true;
 
@@ -95,6 +109,8 @@ try {
 
             // common text messages
         } else {
+            $telegram->countUpTargetType($chat_id, $telegram->getUserId(), 'act_txt_cnt');
+
             if ($forbidden_lists) {
                 foreach($forbidden_lists as $word) {
                     if (strpos($text, $word) !== false) {
@@ -129,10 +145,13 @@ try {
     // Silence is golden!
     // log telegram errors
     // echo $e->getMessage();
+    $chat_id = $telegram->getChatId();
+    Request::sendMessage(array('text' => $e->getMessage(), 'chat_id' => $chat_id));
 }
 
-function delMsg($telegram, $type, $img='') {
+function delMsg($telegram, $type, $img='', $bot_name='') {
     $params = $telegram->getEditParams();
+    $username = $telegram->getUserName();
 
     $data = [
         'chat_id' => (string)$params['chat_id'],
@@ -141,7 +160,7 @@ function delMsg($telegram, $type, $img='') {
     $result = Request::deleteMessage($data);
     if ($result->isOk()) {
         // send announce message
-        $telegram->delMessage($data['message_id'], $data['chat_id'], $type, $img);
+        $telegram->delMessage($data['message_id'], $data['chat_id'], $type, $username, $img, $bot_name);
         return true;
     }
 }

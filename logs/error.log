@@ -1,0 +1,9 @@
+[Tue Oct 29 17:12:42.068498 2019] [ssl:warn] [pid 4941] AH01909: gangbyeongcheols-MacBook-Pro.local:443:0 server certificate does NOT include an ID which matches the server name
+[Tue Oct 29 17:12:42.087275 2019] [ssl:warn] [pid 4944] AH01909: gangbyeongcheols-MacBook-Pro.local:443:0 server certificate does NOT include an ID which matches the server name
+[Tue Oct 29 17:14:05.037360 2019] [authz_core:error] [pid 4945] [client ::1:53465] AH01630: client denied by server configuration: /Volumes/develop/chatbot_test/hook.php
+[Tue Oct 29 17:14:05.690792 2019] [authz_core:error] [pid 4947] [client ::1:53466] AH01630: client denied by server configuration: /Volumes/develop/chatbot_test/favicon.ico, referer: https://80d982fa.ngrok.io/hook.php
+[Tue Oct 29 17:20:45.906837 2019] [ssl:warn] [pid 4999] AH01909: gangbyeongcheols-MacBook-Pro.local:443:0 server certificate does NOT include an ID which matches the server name
+[Tue Oct 29 17:20:45.925866 2019] [ssl:warn] [pid 5000] AH01909: gangbyeongcheols-MacBook-Pro.local:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Nov 08 10:45:39.057610 2019] [ssl:warn] [pid 1150] AH01909: gangbyeongcheols-MacBook-Pro.local:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Nov 08 10:45:39.076862 2019] [ssl:warn] [pid 1151] AH01909: gangbyeongcheols-MacBook-Pro.local:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Nov 08 17:10:07.049587 2019] [php7:error] [pid 1912] [client ::1:52385] script '/Volumes/develop/chatbot_test/phpinfo.php' not found or unable to stat

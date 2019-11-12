@@ -992,6 +992,10 @@ class Telegram
         return $this->update->message['from']['id'];
     }
 
+    public function getUserName() {
+        return $this->update->message['from']['username'];
+    }
+
     public function getImage() {
         if (isset($this->update->message['photo'])) {
             return $this->update->message['photo'];
@@ -1005,7 +1009,7 @@ class Telegram
     }
     
     public function getForbiddenLists($chat_id) {
-        $sql = "select * from forb_wordlist where chat_id=".$chat_id;
+        $sql = "select * from forb_wordlist where chat_id=".$chat_id." and is_active=1;";
         $result_array = array();
 
         if ($sql) {
@@ -1019,7 +1023,7 @@ class Telegram
 
     public function getWhitelist ($chat_id) {
         $result_array = array();
-        $sql = "select * from whitelist_url where chat_id=".$chat_id;
+        $sql = "select * from whitelist_url where chat_id=".$chat_id." and is_active=1;";
 
         if ($sql) {
             foreach($this->pdo->query($sql) as $row) {
@@ -1039,30 +1043,47 @@ class Telegram
         
     }
 
-    public function delMessage( $message_id, $chat_id, $type, $img='' )  {
+    public function delMessage( $message_id, $chat_id, $type, $username, $img='', $bot_name='' )  {
         $sql = "
             SET SQL_SAFE_UPDATES=0;
-            INSERT INTO telegram_deleted_msg_log (msg, del_date, created_date, type, chat_id) 
+            INSERT INTO telegram_deleted_msg_log (msg, del_date, created_date, type, chat_id, msg_from) 
                 VALUES 
                 ((SELECT message.text FROM message WHERE id = ".$message_id."), 
                 now(), 
                 (SELECT message.date as msg_date FROM message WHERE id = ".$message_id."), 
                 '".$type."',
-                ".$chat_id.");
+                ".$chat_id.",
+                '".$username."');
             DELETE FROM telegram_update WHERE message_id = ".$message_id.";
             DELETE FROM message WHERE id = ".$message_id.";
         ";
         if ($img !== '') {
             $sql = "
                 SET SQL_SAFE_UPDATES=0;
-                INSERT INTO telegram_deleted_msg_log (msg, del_date, created_date, type, chat_id, photo_base64) 
+                INSERT INTO telegram_deleted_msg_log (msg, del_date, created_date, type, chat_id, photo_base64, msg_from) 
                     VALUES 
                     ('',
                     now(), 
                     (SELECT message.date as msg_date FROM message WHERE id = ".$message_id."), 
                     '".$type."',
                     ".$chat_id.",
-                    '".$img."');
+                    '".$img."',
+                    '".$username."');
+                DELETE FROM telegram_update WHERE message_id = ".$message_id.";
+                DELETE FROM message WHERE id = ".$message_id.";
+            ";
+        } else if ($type === 'comeout') {
+            $sql = "
+                SET SQL_SAFE_UPDATES=0;
+                INSERT INTO telegram_deleted_msg_log (msg, del_date, created_date, type, chat_id, photo_base64, msg_from) 
+                    VALUES 
+                    ('".$bot_name."',
+                    now(), 
+                    (SELECT message.date as msg_date FROM message WHERE id = ".$message_id."), 
+                    '".$type."',
+                    ".$chat_id.",
+                    '".$img."',
+                    '".$username."');
                 DELETE FROM telegram_update WHERE message_id = ".$message_id.";
                 DELETE FROM message WHERE id = ".$message_id.";
             ";
@@ -1178,9 +1199,62 @@ class Telegram
     }
 
     public function getMsgType () {
+        $result = '';
+
         if (isset($this->update->message['left_chat_member']) || isset($this->update->message['new_chat_member'])) {
-            return 'comeout';
-        } else {
+            $result = 'comeout';
+        } 
+        
+        
+        return $result;
+    }
+
+    public function getStateBot () {
+        if (isset($this->update->message['new_chat_member'])) {
+            if ($this->update->message['new_chat_member']['is_bot']){
+                return $this->update->message['new_chat_member']['id'];
+            } else {
+                return false;
+            }
+        }
+    }
+
+    public function getRoomName () {
+        return $this->update->message['chat']['title'];
+    }
+
+    public function getStateOptions($chat_id) {
+        $sql = "SELECT chat.is_block_bot as is_block_bot, chat.is_img_filter as is_img_filter, chat.is_ordering_comeout as is_ordering_comeout FROM chat WHERE id=".$chat_id;
+
+        foreach($this->pdo->query($sql) as $row) {
+            return $row;
+        }
+    }
+
+    public function getBotName() {
+        $bot_name = '';
+
+        if (isset($this->update->message['new_chat_member'])) {
+            $bot_name = $this->update->message['new_chat_member']['username'];
+        } else if (isset($this->update->message['left_chat_member'])) {
+            $bot_name = $this->update->message['left_chat_member']['username'];
+        }
+        return $bot_name;
+    }
+
+    public function countUpTargetType($chat_id, $member_id, $type) {
+        $sql = "UPDATE user_chat SET ".$type."=".$type." + 1 WHERE chat_id=".$chat_id." and user_id=".$member_id; 
+        if (!$this->pdo->query($sql)) {
+            $this->pdo->rollBack();
+            return false;
+        }
+    }
+
+    public function setStateAdmin($member_id) {
+        $sql = "UPDATE user SET is_admin=1 WHERE id=".$member_id;
+
+        if (!$this->pdo->query($sql)) {
+            $this->pdo->rollBack();
             return false;
         }
     }

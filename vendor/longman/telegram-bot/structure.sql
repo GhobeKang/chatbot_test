@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS `user` (
   `id` bigint COMMENT 'Unique identifier for this user or bot',
   `is_bot` tinyint(1) DEFAULT 0 COMMENT 'True, if this user is a bot',
+  `is_admin` tinyint(2) DEFAULT 0,
   `first_name` CHAR(255) NOT NULL DEFAULT '' COMMENT 'User''s or bot''s first name',
   `last_name` CHAR(255) DEFAULT NULL COMMENT 'User''s or bot''s last name',
   `username` CHAR(191) DEFAULT NULL COMMENT 'User''s or bot''s username',
@@ -25,8 +26,17 @@ CREATE TABLE IF NOT EXISTS `chat` (
   `old_id` bigint DEFAULT NULL COMMENT 'Unique chat identifier, this is filled when a group is converted to a supergroup',
   `depence_count` int(255) DEFAULT 0 NOT NULL COMMENT 'count up whenever matched a banned words.',
   `is_active` tinyint DEFAULT 0 NOT NULL COMMENT 'whther or not is activated properly',
+  `is_block_bot` tinyint DEFAULT 0 NOT NULL COMMENT 'if bot-blocking is activated or not',
+  `is_img_filter` tinyint DEFAULT 0 NOT NULL COMMENT 'if image-filtering is activated or not',
+  `is_ordering_comeout` tinyint DEFAULT 0 NOT NULL COMMENT 'if deleting come-out message is activated or not',
   `activation_code` VARCHAR(255) NULL COMMENT 'activation code',
   `count_msgs` INT(10) NOT NULL DEFAULT 0 COMMENT 'entire messages counts',
+  `module_state_1` tinyint(2) DEFAULT 1,
+  `module_state_2` tinyint(2) DEFAULT 1,
+  `module_state_3` tinyint(2) DEFAULT 1,
+  `module_state_4` tinyint(2) DEFAULT 1,
+  `module_state_5` tinyint(2) DEFAULT 1,
+  `module_state_6` tinyint(2) DEFAULT 1,
 
   PRIMARY KEY (`id`),
   KEY `old_id` (`old_id`)
@@ -35,6 +45,9 @@ CREATE TABLE IF NOT EXISTS `chat` (
 CREATE TABLE IF NOT EXISTS `user_chat` (
   `user_id` bigint COMMENT 'Unique user identifier',
   `chat_id` bigint COMMENT 'Unique user or chat identifier',
+  `act_txt_cnt` bigint DEFAULT 0,
+  `act_photo_cnt` bigint DEFAULT 0,
+  `act_url_cnt` bigint DEFAULT 0,
 
   PRIMARY KEY (`user_id`, `chat_id`),
 
@@ -288,6 +301,7 @@ CREATE TABLE IF NOT EXISTS `request_limiter` (
 
 CREATE TABLE IF NOT EXISTS `faq_list` (
   `chat_id` INT(11) DEFAULT NULL,
+  `id` BIGINT(20) DEFAULT NULL,
   `faq_content` VARCHAR(255) DEFAULT NULL,
   `created_date` DATE DEFAULT NULL,
   `update_date` DATE DEFAULT NULL,
@@ -299,9 +313,11 @@ CREATE TABLE IF NOT EXISTS `faq_list` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
 CREATE TABLE IF NOT EXISTS `forb_wordlist` (
-  `idx` INT(11) DEFAULT NULL AUTO_INCREMENT,
+  `idx` INT(11) NOT NULL AUTO_INCREMENT,
   `word_name` VARCHAR(255) DEFAULT NULL,
   `chat_id` INT(255),
+  `created_time` DATE,
+  `is_active` tinyint(2) DEFAULT 1,
 
   PRIMARY KEY (`idx`)
   
@@ -323,14 +339,17 @@ CREATE TABLE IF NOT EXISTS `telegram_deleted_msg_log` (
   `del_date` DATE,
   `created_date` DATE,
   `type` VARCHAR(255),
-  `char_id` INT(11),
-  `photo_base64` LONGTEXT
+  `chat_id` INT(11),
+  `photo_base64` LONGTEXT,
+  `msg_from` VARCHAR(255)
   
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
 CREATE TABLE IF NOT EXISTS `whitelist_url` (
+  `id` BIGINT(20) DEFAULT NULL,
   `url_pattern` VARCHAR(255),
   `chat_id` INT(11),
-  `created_date` DATE
+  `created_date` DATE,
+  `is_active` tinyint(2) DEFAULT 1
   
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
