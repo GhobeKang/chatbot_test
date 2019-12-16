@@ -1106,6 +1106,7 @@ class Telegram
         if ($sql) {
             foreach($this->pdo->query($sql) as $row) {
                 $dataset = array(
+                    'faq_id' => $row['id'],
                     'faq_content' => $row['faq_content'],
                     'faq_response' => $row['faq_response'],
                     'response_type' => $row['response_type'],
@@ -1250,9 +1251,69 @@ class Telegram
         }
     }
 
+    public function countUpQuestions($chat_id, $member_id) {
+        $message_id = $this->update->message['message_id'];
+        
+        $sql = "UPDATE user_chat SET act_questions = act_questions + 1 WHERE chat_id=".$chat_id." and user_id=". $member_id . ";
+            UPDATE message SET is_question = 1 WHERE id = " . $message_id; 
+        if (!$this->pdo->query($sql)) {
+            $this->pdo->rollBack();
+            return false; 
+        }
+    }
+
     public function setStateAdmin($member_id) {
         $sql = "UPDATE user SET is_admin=1 WHERE id=".$member_id;
 
+        if (!$this->pdo->query($sql)) {
+            $this->pdo->rollBack();
+            return false;
+        }
+    }
+
+    public function setUserScore($score, $member_id) {
+        $sql = "UPDATE user SET score = score + ".$score." where id = ".$member_id;
+        
+        if (!$this->pdo->query($sql)) {
+            $this->pdo->rollBack();
+            return false;
+        }
+    }
+
+    public function getMentions($chat_id) {
+        $sql = "SELECT * FROM interest_words WHERE chat_id=".$chat_id;
+        $result = array();
+
+        foreach($this->pdo->query($sql) as $row) {
+            array_push($result, $row);
+        }
+
+        return $result;
+    }
+
+    public function progress_inlinequery() {
+        
+        if (isset($this->update->callback_query)) {
+            $data = explode(' ', $this->update->callback_query['data']);
+            
+            if ($data[1] === '0') {
+                $this->set_faq_rate(0, $data[0]);
+            } else if ($data[1] === '1'){
+                $this->set_faq_rate(1, $data[0]);
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function set_faq_rate($type, $id) {
+        if ($type) {
+            $sql = "UPDATE faq_list SET helpful = helpful + 1 WHERE id = $id ";
+        } else {
+            $sql = "UPDATE faq_list SET unhelpful = unhelpful + 1 WHERE id = $id";
+        }
+        
         if (!$this->pdo->query($sql)) {
             $this->pdo->rollBack();
             return false;

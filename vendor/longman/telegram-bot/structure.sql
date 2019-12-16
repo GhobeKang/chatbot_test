@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   `language_code` CHAR(10) DEFAULT NULL COMMENT 'IETF language tag of the user''s language',
   `created_at` timestamp NULL DEFAULT NULL COMMENT 'Entry date creation',
   `updated_at` timestamp NULL DEFAULT NULL COMMENT 'Entry date update',
+  `score` bigint,
 
   PRIMARY KEY (`id`),
   KEY `username` (`username`)
@@ -48,6 +49,7 @@ CREATE TABLE IF NOT EXISTS `user_chat` (
   `act_txt_cnt` bigint DEFAULT 0,
   `act_photo_cnt` bigint DEFAULT 0,
   `act_url_cnt` bigint DEFAULT 0,
+  `act_questions` bigint DEFAULT 0,
 
   PRIMARY KEY (`user_id`, `chat_id`),
 
@@ -133,6 +135,7 @@ CREATE TABLE IF NOT EXISTS `message` (
   `connected_website` TEXT NULL COMMENT 'The domain name of the website on which the user has logged in.',
   `passport_data` TEXT NULL COMMENT 'Telegram Passport data',
   `reply_markup` TEXT NULL COMMENT 'Inline keyboard attached to the message',
+  `is_question` tinyint(2) DEFAULT 0,
 
   PRIMARY KEY (`chat_id`, `id`),
   KEY `user_id` (`user_id`),
@@ -308,7 +311,9 @@ CREATE TABLE IF NOT EXISTS `faq_list` (
   `faq_response` MEDIUMTEXT DEFAULT NULL,
   `faq_response_img` VARCHAR(255) DEFAULT NULL,
   `response_type` VARCHAR(10) DEFAULT NULL,
-  `img_type` VARCHAR(10) DEFAULT NULL
+  `img_type` VARCHAR(10) DEFAULT NULL,
+  `helpful` INT(255) DEFAULT 0,
+  `unhelpful` INT(255) DEFAULT 0
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
@@ -351,5 +356,23 @@ CREATE TABLE IF NOT EXISTS `whitelist_url` (
   `chat_id` INT(11),
   `created_date` DATE,
   `is_active` tinyint(2) DEFAULT 1
+  
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
+
+CREATE TABLE IF NOT EXISTS `interestlist` (
+	`id` bigint(255) auto_increment key,
+  `chat_id` bigint(255),
+  `user_id` bigint(255),
+  `registered_time` date
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
+
+CREATE TABLE IF NOT EXISTS `interest_words` (
+  `idx` INT(11) NOT NULL AUTO_INCREMENT,
+  `word_name` VARCHAR(255) DEFAULT NULL,
+  `chat_id` INT(255),
+  `created_time` DATE,
+  `is_active` tinyint(2) DEFAULT 1,
+
+  PRIMARY KEY (`idx`)
   
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;

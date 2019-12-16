@@ -5,10 +5,10 @@ use Longman\TelegramBot\Commands\UserCommand;
 use Longman\TelegramBot\Request;
 use Longman\TelegramBot\DB;
 
-class ShowcodeCommand extends UserCommand {
-    protected $name = 'showcode';                      // Your command's name
+class AqoomCommand extends UserCommand {
+    protected $name = 'aqoom';                      // Your command's name
     protected $description = 'show activation code'; // Your command description
-    protected $usage = '/showcode';                    // Usage of your command
+    protected $usage = '/aqoom';                    // Usage of your command
     protected $version = '1.0.0';                  // Version of your command
 
     public function execute() {

@@ -7,3 +7,5 @@
 [Fri Nov 08 10:45:39.057610 2019] [ssl:warn] [pid 1150] AH01909: gangbyeongcheols-MacBook-Pro.local:443:0 server certificate does NOT include an ID which matches the server name
 [Fri Nov 08 10:45:39.076862 2019] [ssl:warn] [pid 1151] AH01909: gangbyeongcheols-MacBook-Pro.local:443:0 server certificate does NOT include an ID which matches the server name
 [Fri Nov 08 17:10:07.049587 2019] [php7:error] [pid 1912] [client ::1:52385] script '/Volumes/develop/chatbot_test/phpinfo.php' not found or unable to stat
+[Mon Dec 09 17:29:05.139978 2019] [ssl:warn] [pid 47074] AH01909: gangbyeongcheols-MacBook-Pro.local:443:0 server certificate does NOT include an ID which matches the server name
+[Mon Dec 09 17:29:05.165330 2019] [ssl:warn] [pid 47078] AH01909: gangbyeongcheols-MacBook-Pro.local:443:0 server certificate does NOT include an ID which matches the server name
