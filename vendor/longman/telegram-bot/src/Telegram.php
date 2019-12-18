@@ -1090,7 +1090,8 @@ class Telegram
         }
 
         if ($this->pdo->query($sql)) {
-            $update_count_sql = "UPDATE chat SET depence_count = depence_count + 1 WHERE id = " . $chat_id;
+            $update_count_sql = "UPDATE chat SET depence_count = depence_count + 1 WHERE id = " . $chat_id . ";
+                                UPDATE user SET score = score - 5 WHERE username = " . $username . ";";
             if ($this->pdo->query($update_count_sql)){
                 return true;
             };
@@ -1300,6 +1301,8 @@ class Telegram
                 $this->set_faq_rate(0, $data[0]);
             } else if ($data[1] === '1'){
                 $this->set_faq_rate(1, $data[0]);
+            } else if ($data[1] === '2') {
+                $this->set_faq_rate(2, $data[0]);
             }
             return true;
         } else {
@@ -1308,10 +1311,12 @@ class Telegram
     }
 
     public function set_faq_rate($type, $id) {
-        if ($type) {
+        if ($type === 1) {
             $sql = "UPDATE faq_list SET helpful = helpful + 1 WHERE id = $id ";
-        } else {
-            $sql = "UPDATE faq_list SET unhelpful = unhelpful + 1 WHERE id = $id";
+        } else if ($type === 0) {
+            $sql = "UPDATE faq_list SET notenough = notenough + 1 WHERE id = $id";
+        } else if ($type === 2) {
+            $sql = "UPDATE faq_list SET wrong_answer = wrong_answer + 1 WHERE id = $id";
         }
         
         if (!$this->pdo->query($sql)) {

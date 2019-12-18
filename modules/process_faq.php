@@ -8,8 +8,9 @@
                 $keyboard = [
                     'inline_keyboard' => [
                         [
-                            ['text' =>  '👍' . ' helpful', 'callback_data' => $faq['faq_id'] . ' 1'],
-                            ['text' => '👎' . 'unhelpful', 'callback_data' => $faq['faq_id'] . ' 0']
+                            ['text' => 'Useful', 'callback_data' => $faq['faq_id'] . ' 1'],
+                            ['text' => 'Not enough infos', 'callback_data' => $faq['faq_id'] . ' 0'],
+                            ['text' => 'It\'s wrong info', 'callback_data' => $faq['faq_id'] . ' 2']
                         ]
                     ]
                 ];

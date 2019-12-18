@@ -24,6 +24,7 @@
     if ($MIN_LENGTH < strlen($text)) {
         $diff = strlen($text) - $MIN_LENGTH;
         $length_score = $diff / $INTERVAL_LENGTH * $MID_PRIORITY_SCORE_WEIGHT;
+        $telegram->countUpTargetType($chat_id, $caller_member_id, 'act_longtext');
     }
 
     $total_score = $metched_score + $length_score + $default_score;
