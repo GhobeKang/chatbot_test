@@ -20,9 +20,9 @@ class AqoomCommand extends UserCommand {
         if ($chat_member->result->status === 'administrator' || $chat_member->result->status === 'creator') {
             $telegram->setActivationCode($chat_id, sha1($chat_id.time()));
             $activation_code = $telegram->getActivationCode($chat_id);
-            $room_name = $telegram->getRoomName();
+            $room_id = $telegram->getChatId();
             $base_url = 'https://aqoom.chat/';
-            $full_url = $base_url. '?room=' . $room_name . '&code=' .  $activation_code;
+            $full_url = $base_url. '?id=' . $room_id . '&code=' .  $activation_code;
             $this->delMsg($telegram, 'text');
 
             return Request::sendMessage(array('text' => $full_url, 'chat_id' => $caller_member_id, 'parse_mode' => 'html', 'disable_web_page_preview' => false));
