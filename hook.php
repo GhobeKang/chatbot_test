@@ -54,6 +54,7 @@ try {
         $caller_member_id = $telegram->getUserId();
 
         include(__DIR__ . '/modules/init_hook.php');
+        include(__DIR__ . '/modules/analytics_countup_for_group.php');
         
         $forbidden_lists = $telegram->getForbiddenLists($chat_id);
         $faq_lists = $telegram->getFaqLists($chat_id);

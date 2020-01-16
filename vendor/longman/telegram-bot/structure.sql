@@ -43,6 +43,23 @@ CREATE TABLE IF NOT EXISTS `chat` (
   KEY `old_id` (`old_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
+CREATE TABLE IF NOT EXISTS `chat_analysis` (
+  `chat_id` bigint,
+  `analytics_user_left` int(255) default 0,
+  `analytics_user_new` int(255) default 0,
+  `analytics_count_img` int(255) default 0,
+  `analytics_count_gif` int(255) default 0,
+  `analytics_count_sticker` int(255) default 0,
+  `analytics_count_forward` int(255) default 0,
+  `analytics_count_text` int(255) default 0,
+  `analytics_count_poll` int(255) default 0,
+  `analytics_count_survey` int(255) default 0,
+
+  UNIQUE (`chat_id`),
+  FOREIGN KEY (`chat_id`) REFERENCES `chat` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
+
+
 CREATE TABLE IF NOT EXISTS `user_chat` (
   `user_id` bigint COMMENT 'Unique user identifier',
   `chat_id` bigint COMMENT 'Unique user or chat identifier',

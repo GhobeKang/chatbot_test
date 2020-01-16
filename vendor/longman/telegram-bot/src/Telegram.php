@@ -1203,12 +1203,46 @@ class Telegram
     public function getMsgType () {
         $result = '';
 
-        if (isset($this->update->message['left_chat_member']) || isset($this->update->message['new_chat_member'])) {
-            $result = 'comeout';
-        } 
+        if (isset($this->update->message['left_chat_member'])) {
+            $result = 'left';
+        } else if ( isset($this->update->message['new_chat_member'])) {
+            $result = 'new';
+        } else if ( isset($this->update->message['photo']) ){
+            $result = 'image';
+        } else if ( isset($this->update->message['sticker']) ) {
+            $result = 'sticker';
+        } else if ( isset($this->update->message['animation']) ) {
+            $result = 'gif';
+        } else if ( isset($this->update->message['animation']) ) {
+            $result = 'forwarded';
+        } else if ( isset($this->update->message['poll']) ) {
+            $result = 'poll';
+        } else if ( isset($this->update->message['survey']) ) {
+            $result = 'survey';
+        } else {
+            $result = 'text';
+        }
         
         
         return $result;
+    }
+
+    public function countup_for_group ($type, $chat_id) {
+        $sql = "UPDATE chat_analysis SET $type=$type+1 WHERE chat_id=$chat_id";
+
+        if (!$this->pdo->query($sql)) {
+            $this->pdo->rollBack();
+            return false;
+        }
+    }
+
+    public function setAnalysisRow ($chat_id) {
+        $sql = "INSERT IGNORE INTO chat_analysis (chat_id) VALUES ($chat_id);";
+
+        if (!$this->pdo->query($sql)) {
+            $this->pdo->rollBack();
+            return false;
+        }
     }
 
     public function getStateBot () {

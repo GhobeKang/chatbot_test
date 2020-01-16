@@ -20,7 +20,7 @@ if ($msg_type === 'comeout' && $options['is_ordering_comeout']) {
     return true;
 }
 
-
+$telegram->setAnalysisRow($chat_id);
 $telegram->countUpEntireMsgs($chat_id);
 $isActivation = $telegram->getStateActivation($chat_id);
 if (!$isActivation) {
