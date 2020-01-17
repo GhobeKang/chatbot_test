@@ -1121,9 +1121,9 @@ class Telegram
         return $result_array;
     }
 
-    public function getStartMessage ($chat_id) {
+    public function getWelcome ($chat_id) {
         if ($chat_id) {
-            $sql = "SELECT * FROM start_menus WHERE chat_id=".$chat_id;
+            $sql = "SELECT * FROM chat_welcome WHERE chat_id=".$chat_id;
             $result_array = array();
 
             foreach($this->pdo->query($sql) as $row) {
@@ -1132,6 +1132,27 @@ class Telegram
                     'content_img' => $row['content_img'],
                     'img_type' => $row['img_type'],
                     'response_type' => $row['response_type']
+                );
+                
+                array_push($result_array, $dataset);
+            }
+
+            return $result_array;
+        }
+    }
+
+    public function getAnnounce ($chat_id) {
+        if ($chat_id) {
+            $sql = "SELECT * FROM chat_announcement WHERE chat_id=".$chat_id;
+            $result_array = array();
+
+            foreach($this->pdo->query($sql) as $row) {
+                $dataset = array(
+                    'chat_id' => $row['chat_id'],
+                    'content' => $row['content'],
+                    'interval' => $row['interval'],
+                    'period' => $row['period'],
+                    'last_update' => $row['last_update']
                 );
                 
                 array_push($result_array, $dataset);
@@ -1213,18 +1234,27 @@ class Telegram
             $result = 'sticker';
         } else if ( isset($this->update->message['animation']) ) {
             $result = 'gif';
-        } else if ( isset($this->update->message['animation']) ) {
-            $result = 'forwarded';
+        } else if ( isset($this->update->message['forward_from']) ) {
+            $result = 'forward';
         } else if ( isset($this->update->message['poll']) ) {
             $result = 'poll';
         } else if ( isset($this->update->message['survey']) ) {
             $result = 'survey';
+        } else if ( isset($this->update->message['voice']) ) {
+            $refult = 'voice';
         } else {
             $result = 'text';
         }
         
-        
         return $result;
+    }
+
+    public function getFilterOptions($chat_id) {
+        $sql = "SELECT * FROM anti_spam_options WHERE chat_id=$chat_id";
+
+        foreach($this->pdo->query($sql) as $row) {
+            return $row;
+        }
     }
 
     public function countup_for_group ($type, $chat_id) {
@@ -1237,7 +1267,8 @@ class Telegram
     }
 
     public function setAnalysisRow ($chat_id) {
-        $sql = "INSERT IGNORE INTO chat_analysis (chat_id) VALUES ($chat_id);";
+        $sql = "INSERT IGNORE INTO chat_analysis (chat_id) VALUES ($chat_id);
+            INSERT IGNORE INTO anti_spam_options (chat_id) VALUES ($chat_id);";
 
         if (!$this->pdo->query($sql)) {
             $this->pdo->rollBack();

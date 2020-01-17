@@ -58,15 +58,13 @@ try {
         
         $forbidden_lists = $telegram->getForbiddenLists($chat_id);
         $faq_lists = $telegram->getFaqLists($chat_id);
+        $filter_options = $telegram->getFilterOptions($chat_id);
 
         $url_pattern = '/(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})|[a-zA-Z0-9]+\.[^\s]{2,}/';
 
-        // if sending a photo
-        if ($photo && $options['is_img_filter']) {
-            include(__DIR__ . '/modules/process_face_filtering.php');
-        }
+        include(__DIR__ . '/modules/anti_spam.php');
 
-        // if the message is matched with URL pattern
+        // if the message is matched with URL pattern, white list
         if ($text && preg_match($url_pattern, $text)) {
             include(__DIR__ . '/modules/process_url_block.php');
 
@@ -74,6 +72,7 @@ try {
         } else {
             $telegram->countUpTargetType($chat_id, $telegram->getUserId(), 'act_txt_cnt');
 
+            // black list
             include(__DIR__ . '/modules/process_word_block.php');
             
             // if a message is matched with registered FAQ patten,
@@ -106,7 +105,7 @@ function delMsg($telegram, $type, $img='', $bot_name='') {
     $result = Request::deleteMessage($data);
     if ($result->isOk()) {
         // send announce message
-        $telegram->delMessage($data['message_id'], $data['chat_id'], $type, $username, $img, $bot_name);
+    $telegram->delMessage($data['message_id'], $data['chat_id'], $type, $username, $img, $bot_name);
         return true;
     }
 }

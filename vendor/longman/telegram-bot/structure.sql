@@ -59,6 +59,33 @@ CREATE TABLE IF NOT EXISTS `chat_analysis` (
   FOREIGN KEY (`chat_id`) REFERENCES `chat` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
+create table if not exists `anti_spam_options` (
+	`chat_id` bigint,
+    `anti_image` boolean default 0,
+    `anti_url` boolean default 0,
+    `anti_forward` boolean default 0,
+    `anti_voice` boolean default 0,
+    `anti_gif` boolean default 0,
+    `anti_sticker` boolean default 0,
+    `anti_join_message` boolean default 0,
+    `anti_left_message` boolean default 0,
+    `anti_longname` boolean default 0,
+    `anti_flood` boolean default 0,
+    
+    UNIQUE (`chat_id`),
+    foreign key (chat_id) references chat(id)
+)
+
+create table if not exists `chat_announcement` (
+	  `chat_id` bigint,
+    `content` text,
+    `interval` int(255) default 600000,
+    `period` timestamp default now(),
+    `last_update` timestamp default now(),
+    
+    unique(`chat_id`),
+    foreign key (chat_id) references chat(id)
+)
 
 CREATE TABLE IF NOT EXISTS `user_chat` (
   `user_id` bigint COMMENT 'Unique user identifier',
