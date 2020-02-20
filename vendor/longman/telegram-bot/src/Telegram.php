@@ -1091,7 +1091,7 @@ class Telegram
 
         if ($this->pdo->query($sql)) {
             $update_count_sql = "UPDATE chat SET depence_count = depence_count + 1 WHERE id = " . $chat_id . ";
-                                UPDATE user SET score = score - 5 WHERE username = " . $username . ";";
+                                UPDATE user SET warning_pt = warning_pt + 5 WHERE username = " . $username . ";";
             if ($this->pdo->query($update_count_sql)){
                 return true;
             };
@@ -1241,7 +1241,9 @@ class Telegram
         } else if ( isset($this->update->message['survey']) ) {
             $result = 'survey';
         } else if ( isset($this->update->message['voice']) ) {
-            $refult = 'voice';
+            $result = 'voice';
+        } else if ( isset($this->update->message['video']) ) {
+            $result = 'video';
         } else {
             $result = 'text';
         }
@@ -1384,6 +1386,67 @@ class Telegram
             $sql = "UPDATE faq_list SET wrong_answer = wrong_answer + 1 WHERE id = $id";
         }
         
+        if (!$this->pdo->query($sql)) {
+            $this->pdo->rollBack();
+            return false;
+        }
+    }
+
+    public function set_restriction($user_id, $time) {
+        $sql = "UPDATE user SET is_new=1, restricted_time=$time WHERE id=$user_id";
+
+        if (!$this->pdo->query($sql)) {
+            $this->pdo->rollBack();
+            return false;
+        }
+    }
+
+    public function get_restriction($chat_id, $user_id) {
+        $sql = "SELECT user.is_new FROM user WHERE id=$user_id";
+        $result = array();
+
+        foreach($this->pdo->query($sql) as $row) {
+            array_push($result, $row['is_new']);
+            $sql_restriction_time = "SELECT chat.restriction_time FROM chat WHERE id=$chat_id";
+            foreach($this->pdo->query($sql_restriction_time) as $row_restrict) {
+                array_push($result, $row_restrict['restriction_time']);
+            }
+        }
+
+        return $result;
+    }
+
+    public function expire_restriction($user_id) {
+        $sql = "UPDATE user SET is_new=0 WHERE id=$user_id";
+
+        if (!$this->pdo->query($sql)) {
+            $this->pdo->rollBack();
+            return false;
+        }
+    }
+
+    public function get_restriction_time($user_id) {
+        $sql = "SELECT user.restricted_time FROM user WHERE id=$user_id and restricted_time > now()";
+
+        if (!$this->pdo->query($sql)) {
+            $this->pdo->rollBack();
+            return false;
+        } else {
+            foreach($this->pdo->query($sql) as $row) {
+                if (sizeof($row) !== 0) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }
+    }
+
+    public function markUpMention($chat_id) {
+        $message_id = $this->update->message['message_id'];
+
+        $sql = "UPDATE message SET is_mention = 1 WHERE chat_id = $chat_id and id = $message_id";
+
         if (!$this->pdo->query($sql)) {
             $this->pdo->rollBack();
             return false;

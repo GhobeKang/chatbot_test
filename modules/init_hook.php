@@ -24,7 +24,4 @@ if ($msg_type === 'comeout' && $options['is_ordering_comeout']) {
 $telegram->setAnalysisRow($chat_id);
 $telegram->countUpEntireMsgs($chat_id);
 
-if (sizeof($welcome_msg) !== 0) {
-
-}
 ?>

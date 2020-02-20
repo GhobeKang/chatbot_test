@@ -3,18 +3,25 @@
 use Longman\TelegramBot\Request;
 
 require __DIR__ . '/vendor/autoload.php';
-$test_env = 1;
+$test_env = 0;
 
 if ($test_env) {
     $bot_api_key  = '822428347:AAGXao7qTxCL5MoqQyeSqPc7opK607fA51I';
     $bot_username = 'aqoom_test_bot';
     $mysql_credentials = [
-        'host'     => '127.0.0.1',
+        'host'     => '34.97.24.74',
         'port'     => 3306, // optional
         'user'     => 'root',
-        'password' => 'term!ner1',
-        'database' => 'aqoom'
-    ];
+        'password' => 'aq@@mServ!ce',
+        'database' => 'aqoomchat',
+     ];
+    // $mysql_credentials = [
+    //     'host'     => '127.0.0.1',
+    //     'port'     => 3306, // optional
+    //     'user'     => 'root',
+    //     'password' => 'term!ner1',
+    //     'database' => 'aqoom'
+    // ];
 } else {
     $bot_api_key  = '847825836:AAFv02ESsTVjnrzIomgdiVjBGWVw7CpN_Cg';
     $bot_username = 'aqoom_bot';
@@ -54,7 +61,6 @@ try {
         $caller_member_id = $telegram->getUserId();
 
         include(__DIR__ . '/modules/init_hook.php');
-        include(__DIR__ . '/modules/analytics_countup_for_group.php');
         
         $forbidden_lists = $telegram->getForbiddenLists($chat_id);
         $faq_lists = $telegram->getFaqLists($chat_id);
@@ -63,14 +69,16 @@ try {
         $url_pattern = '/(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})|[a-zA-Z0-9]+\.[^\s]{2,}/';
 
         include(__DIR__ . '/modules/anti_spam.php');
+        include(__DIR__ . '/modules/restriction.php');   
 
+        include(__DIR__ . '/modules/analytics_countup.php');
+        
         // if the message is matched with URL pattern, white list
         if ($text && preg_match($url_pattern, $text)) {
             include(__DIR__ . '/modules/process_url_block.php');
 
         // common text messages
         } else {
-            $telegram->countUpTargetType($chat_id, $telegram->getUserId(), 'act_txt_cnt');
 
             // black list
             include(__DIR__ . '/modules/process_word_block.php');
@@ -79,10 +87,10 @@ try {
             include(__DIR__ . '/modules/process_faq.php');
 
             // collect user questions to will be used at marketing elements.
-            include(__DIR__ . '/modules/market_collect_questions.php');
+            include(__DIR__ . '/modules/collecting_seperated_messages.php');
 
             // calculate score of user's activities.
-            include(__DIR__ . '/modules/market_scoring.php');
+            // include(__DIR__ . '/modules/market_scoring.php');
         }
     }
 } catch (Exception $e) {
