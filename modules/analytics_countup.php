@@ -7,6 +7,7 @@
             }
             case 'new' : {
                 $telegram->countup_for_group('analytics_user_new', $chat_id);
+                $telegram->send_welcome_message($chat_id);
                 break;
             }
             case 'image' : {
@@ -51,6 +52,11 @@
                 $telegram->countup_for_group('analytics_count_video', $chat_id);
                 $telegram->countUpTargetType($chat_id, $telegram->getUserId(), 'act_media');
                 break;
+            }
+            case 'command' : {
+                $telegram->countup_for_group('analytics_count_command', $chat_id);
+                $telegram->countUpTargetType($chat_id, $telegram->getUserId(), 'act_command_cnt');
+                break;                
             }
         }
     }

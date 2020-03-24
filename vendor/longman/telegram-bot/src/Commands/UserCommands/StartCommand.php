@@ -51,23 +51,43 @@ class StartCommand extends UserCommand
         $telegram = $this->getTelegram();
         $message = $this->getMessage();
         $chat_id = $message->getChat()->getId();
+        $member_name = $message->getFrom()->getFirstName();
 
-        $startMsg = $telegram->getStartMessage($chat_id);
-        if ($startMsg) {
-            $startMsg = $startMsg[0];
-            if ($startMsg['response_type'] === 'txt') {
-                $dataset = array(
-                    'chat_id' => $chat_id,
-                    'text' => $startMsg['content_txt']
-                );
-                Request::sendMessage($dataset);
-            } else if ($startMsg['response_type'] === 'img') {
-                $dataset = array(
-                    'chat_id' => $chat_id,
-                    'photo' => $startMsg['content_img']
-                );
-                Request::sendPhoto($dataset);
-            }
-        }
+        $msg_content = "
+Hi $member_name! Welcome to AQOOM chatbot, your new sidekick for Telegram. 
+
+AQOOM chatbot will help you to manage your Telegram groups easier and more efficient. Analytics, CRM, Scheduled Messages, Anti-Spam, Reports, Message Logs, you name it, we may have it.
+        
+1. Add @aqoom_bot to your group and make it as an administrator.
+        
+2. You can proceed to your console/dashboard by logging in here. (Links to www.aqoom.chat)
+        
+3. You can now configure your filters, functions,  and settings for your group~
+        
+We are currently in BETA version and we will appreciate if you could give us some feedback! If you cannot login or having any problems, feel free to contact us at info@aqoom.com
+";
+
+        $inline_keyboard = [
+            'inline_keyboard' => [
+                [
+                    [
+                        'text' => 'Visit AQOOM Website',
+                        'url' => 'https://aqoom.chat'
+                    ]
+                ],[
+                    [
+                        'text' => 'Add to group',
+                        'url' => 'https://t.me/aqoom_bot?startgroup=hbase'
+                    ]
+                ]
+            ]
+        ];
+        
+        $dataset = array(
+            'chat_id' => $chat_id,
+            'text' => $msg_content,
+            'reply_markup' => json_encode($inline_keyboard) 
+        );
+        Request::sendMessage($dataset);
     }
 }

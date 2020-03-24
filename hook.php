@@ -3,7 +3,7 @@
 use Longman\TelegramBot\Request;
 
 require __DIR__ . '/vendor/autoload.php';
-$test_env = 0;
+$test_env = 1;
 
 if ($test_env) {
     $bot_api_key  = '822428347:AAGXao7qTxCL5MoqQyeSqPc7opK607fA51I';
@@ -40,6 +40,7 @@ $commands_paths = [
 
 try {
     // Create Telegram API object
+    date_default_timezone_set('Asia/Seoul'); 
     $telegram = new Longman\TelegramBot\Telegram($bot_api_key, $bot_username);
     $telegram->addCommandsPaths($commands_paths);
     $telegram->enableMySql($mysql_credentials);
@@ -48,17 +49,25 @@ try {
     
     // Handle telegram webhook request
     if ($telegram->handle()) {
+        $caller_member_id = $telegram->getUserId();
+        $chat_id = $telegram->getChatId();
+
         if ($telegram->progress_inlinequery()) {
             return;
         }
 
+        $chat_white_users = $telegram->getWhiteUsers($chat_id);
+        foreach($chat_white_users as $user) {
+            if ($user->user_id === $caller_member_id) {
+                return false;
+            }
+        }
+
         $text = $telegram->getMessage();
-        $chat_id = $telegram->getChatId();
         $photo = $telegram->getImage();
         $msg_type = $telegram->getMsgType();
         $is_bot = $telegram->getStateBot();
         $options = $telegram->getStateOptions($chat_id);
-        $caller_member_id = $telegram->getUserId();
 
         include(__DIR__ . '/modules/init_hook.php');
         
@@ -69,29 +78,24 @@ try {
         $url_pattern = '/(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})|[a-zA-Z0-9]+\.[^\s]{2,}/';
 
         include(__DIR__ . '/modules/anti_spam.php');
-        include(__DIR__ . '/modules/restriction.php');   
+        // include(__DIR__ . '/modules/restriction.php');   
 
         include(__DIR__ . '/modules/analytics_countup.php');
         
-        // if the message is matched with URL pattern, white list
-        if ($text && preg_match($url_pattern, $text)) {
-            include(__DIR__ . '/modules/process_url_block.php');
-
-        // common text messages
-        } else {
-
+        if ($msg_type === 'text') {
             // black list
             include(__DIR__ . '/modules/process_word_block.php');
             
             // if a message is matched with registered FAQ patten,
             include(__DIR__ . '/modules/process_faq.php');
 
-            // collect user questions to will be used at marketing elements.
-            include(__DIR__ . '/modules/collecting_seperated_messages.php');
-
             // calculate score of user's activities.
             // include(__DIR__ . '/modules/market_scoring.php');
         }
+
+        // collect user questions to will be used at marketing elements.
+        include(__DIR__ . '/modules/collecting_seperated_messages.php');
+    
     }
 } catch (Exception $e) {
     // Silence is golden!

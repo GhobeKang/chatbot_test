@@ -1090,8 +1090,18 @@ class Telegram
         }
 
         if ($this->pdo->query($sql)) {
-            $update_count_sql = "UPDATE chat SET depence_count = depence_count + 1 WHERE id = " . $chat_id . ";
+            $update_count_sql = "UPDATE chat SET depence_count = depence_count + 1, count_msgs = count_msgs -1 WHERE id = " . $chat_id . ";
                                 UPDATE user SET warning_pt = warning_pt + 5 WHERE username = " . $username . ";";
+            if ($type === 'text') {
+                $update_count_sql = $update_count_sql . "UPDATE user_chat SET act_txt_cnt = act_txt_cnt - 1 WHERE chat_id = $chat_id;";
+            } else if ($type === 'photo' || $type === 'gif') {
+                $update_count_sql = $update_count_sql . "UPDATE user_chat SET act_photo_cnt = act_photo_cnt - 1 WHERE chat_id = $chat_id;";
+            } else if ($type === 'url') {
+                $update_count_sql = $update_count_sql . "UPDATE user_chat SET act_url_cnt = act_url_cnt - 1 WHERE chat_id = $chat_id;";
+            } else if ($type === 'command') {
+                $update_count_sql = $update_count_sql . "UPDATE user_chat SET act_command_cnt = act_command_cnt - 1 WHERE chat_id = $chat_id;";
+            }
+
             if ($this->pdo->query($update_count_sql)){
                 return true;
             };
@@ -1112,7 +1122,9 @@ class Telegram
                     'faq_response' => $row['faq_response'],
                     'response_type' => $row['response_type'],
                     'faq_response_img' => $row['faq_response_img'],
-                    'img_type' => $row['img_type']
+                    'img_type' => $row['img_type'],
+                    'buttons' => $row['buttons'],
+                    'keyword_type' => $row['keyword_type']
                 );
                 array_push($result_array, $dataset);
             }
@@ -1244,6 +1256,11 @@ class Telegram
             $result = 'voice';
         } else if ( isset($this->update->message['video']) ) {
             $result = 'video';
+        } else if ( isset($this->update->message['entities'])) {
+            $message_type = $this->update->message['entities'][0]['type'];
+            if ($message_type === 'bot_command') {
+                $result = 'command';
+            }
         } else {
             $result = 'text';
         }
@@ -1393,7 +1410,8 @@ class Telegram
     }
 
     public function set_restriction($user_id, $time) {
-        $sql = "UPDATE user SET is_new=1, restricted_time=$time WHERE id=$user_id";
+        $restriction_time = date('Y-m-d H:i:s', $time);
+        $sql = "UPDATE user SET is_new=1, restricted_time='$restriction_time' WHERE id=$user_id";
 
         if (!$this->pdo->query($sql)) {
             $this->pdo->rollBack();
@@ -1448,6 +1466,70 @@ class Telegram
         $sql = "UPDATE message SET is_mention = 1 WHERE chat_id = $chat_id and id = $message_id";
 
         if (!$this->pdo->query($sql)) {
+            $this->pdo->rollBack();
+            return false;
+        }
+    }
+
+    public function send_welcome_message ($chat_id) {
+        $crr_time = time();
+        
+        $query_update_date = "SELECT * FROM start_menus WHERE chat_id=$chat_id";
+        $query_result = $this->pdo->query($query_update_date);
+        
+        $result_array = $query_result->fetchAll();
+        $rand_index = rand(0, sizeof($result_array) - 1);
+
+        $row = $result_array[$rand_index];
+
+        if (sizeof($row) !== 0) {
+            $diff = ($crr_time - strtotime($row['update_date'])) / 60;
+            if ($diff > 2) {
+                if ($row['response_type'] === 'txt') {
+                    $user_name = $this->update->message['new_chat_member']['first_name'];
+                    $dataset = array('text' => str_replace('[user]', $user_name, $row['content_txt']), 'chat_id' => $chat_id);
+                    if ($row['buttons']) {
+                        $keyboard = [
+                            'inline_keyboard' => array(json_decode($row['buttons'], true))
+                        ];
+                        
+                        $dataset['reply_markup'] = json_encode($keyboard);
+                    }
+                    Request::sendMessage($dataset);
+                } else if ($row['response_type'] === 'img') {
+                    $dataset = array('photo' => $row['content_img'], 'chat_id' => $chat_id);
+                    if ($row['buttons']) {
+                        $keyboard = [
+                            'inline_keyboard' => array(json_decode($row['buttons'], true))
+                        ];
+                        
+                        $dataset['reply_markup'] = json_encode($keyboard);
+                    }
+                    Request::sendPhoto($dataset);
+                }
+                
+                $will_update_time = date('Y-m-d H:i:s', $crr_time);
+                $query_update_date = "UPDATE start_menus SET update_date='$will_update_time' WHERE chat_id=$chat_id";
+                if(!$this->pdo->query($query_update_date)) {
+                    $this->pdo->rollBack();
+                    return false;
+                }
+            }
+        } else {
+            $this->pdo->rollBack();
+            return false;
+        }
+    
+    }
+
+    public function getWhiteUsers($chat_id) {
+        $sql = "SELECT * FROM user_whitelist WHERE chat_id=$chat_id";
+
+        $query = $this->pdo->query($sql);
+        if($query) {
+            $result = $query->fetchAll();
+            return $result;
+        } else {
             $this->pdo->rollBack();
             return false;
         }

@@ -1,1 +1,1 @@
-Input is empty!
+There is no active transaction
