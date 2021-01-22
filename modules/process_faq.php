@@ -35,6 +35,7 @@
                         }
                         
                     }
+                    $telegram->pushEventHistory($chat_id, 'faq');
                     return true;
                 }
             }
@@ -52,7 +53,7 @@
                             }
                             
                         }
-                        
+                        $telegram->pushEventHistory($chat_id, 'faq');
                         return true;
                     }
                 }

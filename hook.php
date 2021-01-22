@@ -3,7 +3,7 @@
 use Longman\TelegramBot\Request;
 
 require __DIR__ . '/vendor/autoload.php';
-$test_env = 1;
+$test_env = 0;
 
 if ($test_env) {
     $bot_api_key  = '822428347:AAGXao7qTxCL5MoqQyeSqPc7opK607fA51I';
@@ -58,7 +58,7 @@ try {
 
         $chat_white_users = $telegram->getWhiteUsers($chat_id);
         foreach($chat_white_users as $user) {
-            if ($user->user_id === $caller_member_id) {
+            if ($user['user_id'] === $caller_member_id) {
                 return false;
             }
         }
@@ -117,7 +117,8 @@ function delMsg($telegram, $type, $img='', $bot_name='') {
     $result = Request::deleteMessage($data);
     if ($result->isOk()) {
         // send announce message
-    $telegram->delMessage($data['message_id'], $data['chat_id'], $type, $username, $img, $bot_name);
+        $telegram->delMessage($data['message_id'], $data['chat_id'], $type, $username, $img, $bot_name);
+        $telegram->pushEventHistory($data['chat_id'], 'deleted');
         return true;
     }
 }

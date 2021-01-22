@@ -1087,6 +1087,19 @@ class Telegram
                 DELETE FROM telegram_update WHERE message_id = ".$message_id.";
                 DELETE FROM message WHERE id = ".$message_id.";
             ";
+        } else if ($type === 'new' || $type === 'left') {
+            $sql = "
+                SET SQL_SAFE_UPDATES=0;
+                INSERT INTO telegram_deleted_msg_log (msg, del_date, created_date, type, chat_id, photo_base64, msg_from) 
+                    VALUES 
+                    ('".$bot_name."',
+                    now(), 
+                    (SELECT message.date as msg_date FROM message WHERE id = ".$message_id."), 
+                    '".$type."',
+                    ".$chat_id.",
+                    '".$img."',
+                    '".$username."');
+            ";
         }
 
         if ($this->pdo->query($sql)) {
@@ -1496,6 +1509,7 @@ class Telegram
                         $dataset['reply_markup'] = json_encode($keyboard);
                     }
                     Request::sendMessage($dataset);
+                    $this->pushEventHistory($chat_id, 'welcome');
                 } else if ($row['response_type'] === 'img') {
                     $dataset = array('photo' => $row['content_img'], 'chat_id' => $chat_id);
                     if ($row['buttons']) {
@@ -1506,6 +1520,7 @@ class Telegram
                         $dataset['reply_markup'] = json_encode($keyboard);
                     }
                     Request::sendPhoto($dataset);
+                    $this->pushEventHistory($chat_id, 'welcome');
                 }
                 
                 $will_update_time = date('Y-m-d H:i:s', $crr_time);
@@ -1523,13 +1538,22 @@ class Telegram
     }
 
     public function getWhiteUsers($chat_id) {
-        $sql = "SELECT * FROM user_whitelist WHERE chat_id=$chat_id";
+        $sql = "SELECT user.id as user_id FROM user_whitelist left outer join user on user.username=user_whitelist.username WHERE chat_id=$chat_id";
 
         $query = $this->pdo->query($sql);
         if($query) {
             $result = $query->fetchAll();
             return $result;
         } else {
+            $this->pdo->rollBack();
+            return false;
+        }
+    }
+
+    public function pushEventHistory($chat_id, $type) {
+        $sql = "INSERT INTO bot_activities (chat_id, event, date) values ($chat_id, '$type', now())";
+
+        if (!$this->pdo->query($sql)) {
             $this->pdo->rollBack();
             return false;
         }
