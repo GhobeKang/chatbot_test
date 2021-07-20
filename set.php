@@ -2,7 +2,7 @@
 // Load composer
 require __DIR__ . '/vendor/autoload.php';
 
-$bot_api_key  = '847825836:AAFv02ESsTVjnrzIomgdiVjBGWVw7CpN_Cg';
+$bot_api_key  = '1945387060:AAFhtD9o3tJVaj_x8f3v8Ztc9iZZZGEjJds';
 $bot_username = 'aqoom_bot';
 $hook_url     = 'https://373a2d74.ngrok.io';
 
