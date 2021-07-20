@@ -6,7 +6,7 @@ require __DIR__ . '/vendor/autoload.php';
 $test_env = 0;
 
 if ($test_env) {
-    $bot_api_key  = '822428347:AAGXao7qTxCL5MoqQyeSqPc7opK607fA51I';
+    $bot_api_key  = '1945387060:AAFhtD9o3tJVaj_x8f3v8Ztc9iZZZGEjJds';
     $bot_username = 'aqoom_test_bot';
     $mysql_credentials = [
         'host'     => '34.97.24.74',
@@ -23,7 +23,7 @@ if ($test_env) {
     //     'database' => 'aqoom'
     // ];
 } else {
-    $bot_api_key  = '847825836:AAFv02ESsTVjnrzIomgdiVjBGWVw7CpN_Cg';
+    $bot_api_key  = '1945387060:AAFhtD9o3tJVaj_x8f3v8Ztc9iZZZGEjJds';
     $bot_username = 'aqoom_bot';
     $mysql_credentials = [
         'host'     => '34.97.24.74',
